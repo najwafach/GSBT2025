@@ -1,0 +1,101 @@
+import math
+import pandas as pd
+df = pd.read_csv('data.csv')
+data = df.copy()
+
+#menghitung entropy
+def entroy(data):
+  label_counts = {}
+  for row in data:
+    label = row[-1]
+    label_counts[label] = label_counts.get(label, 0) + 1
+
+  entropy = 0.0
+  total = len(data)
+  for count in label_counts.values():
+    prob = count / total
+    entropy -= prob * math.log(prob, 2)
+
+  print(entropy)
+  return entropy
+
+#split dataset
+def split_dataset(data, feature_index, threshold):
+  left, right = [], []
+  for row in data:
+    if row[feature_index] <= threshold:
+      left.append(row)
+    else:
+      right.append(row)
+  print(left)
+  print(right)
+  return left, right
+
+#mencari split terbaik
+def find_best_split(data):
+  base_entropy = entropy(data)
+  best_info_gain = 0.0
+  best_feature = None
+  best_threshold = None
+
+  n_features = len(data[0]) - 1
+  for feature_index in range(len(data[0]) - 1):
+    values = sorted(set(row[feature_index] for row in data))
+    for i in range(len(values) - 1):
+      threshold = (values[i] + values[i + 1]) / 2
+      left, right = split_dataset(data, feature_index, threshold)
+      if len(left) == 0 or len(right) == 0:
+        continue
+
+      p = len(left) / len(data)
+      new_entropy = p * entropy(left) + (1 - p) * entropy(right)
+      info_gain = base_entropy - new_entropy
+
+      if info_gain > best_info_gain:
+        best_info_gain = info_gain
+        best_feature = feature_index
+        best_threshold = threshold
+
+  print(best_feature)
+  print(best_threshold)
+  return best_feature, best_threshold
+
+#membangun pohon
+def build_tree(data, depth=0):
+  labels = [row[-1] for row in data]
+
+  if labels.count(labels[0]) == len(labels):
+    print(" " * depth*2 + f"Leaf: {labels[0]}")
+    return labels[0]
+
+  feature, threshold = find_best_split(data)
+  if feature is None:
+    majority = max(set(labels), key=labels.count)
+    print(" " * depth*2 + f"Leaf: {majority}")
+    return majority
+
+  left, right = split_dataset(data, feature, threshold)
+
+  print(" " * depth*2 + f"[Node] F{feature} ≤ {threshold}")
+  tree = {}
+  tree[(feature, threshold)] = {
+        "≤": build_tree(left, depth+1),
+        ">": build_tree(right, depth+1)
+  }
+  return tree
+
+  #memprediksi
+  def classify(tree, sample):
+    if not isinstance(tree, dict):
+        return tree
+
+    (feature, threshold), branches = list(tree.items())[0]
+    if sample[feature] <= threshold:
+        return classify(branches["≤"], sample)
+    else:
+        return classify(branches[">"], sample)
+
+  tree = build_tree(dataset)
+  print("Pohon Keputusan:", tree)
+
+  print("Prediksi:", classify(tree, sample))
