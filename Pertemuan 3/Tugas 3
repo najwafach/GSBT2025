@@ -1,0 +1,47 @@
+# Hyperparameter Tuning dengan Optuna + XGBoostClassifier
+
+import optuna
+from sklearn.datasets import load_breast_cancer
+from sklearn.model_selection import cross_val_score, StratifiedKFold
+from xgboost import XGBClassifier
+import numpy as np
+
+# Load dataset (contoh: breast cancer dataset)
+data = load_breast_cancer()
+X, y = data.data, data.target
+
+# Definisi fungsi objective untuk Optuna
+def objective(trial):
+    # Definisikan hyperparameter yang akan dituning
+    param = {
+        "n_estimators": trial.suggest_int("n_estimators", 50, 300),
+        "max_depth": trial.suggest_int("max_depth", 2, 12),
+        "learning_rate": trial.suggest_float("learning_rate", 0.01, 0.3, log=True),
+        "subsample": trial.suggest_float("subsample", 0.5, 1.0),
+        "colsample_bytree": trial.suggest_float("colsample_bytree", 0.5, 1.0),
+        "gamma": trial.suggest_float("gamma", 0, 5),
+        "reg_lambda": trial.suggest_float("reg_lambda", 1e-3, 10, log=True),
+        "reg_alpha": trial.suggest_float("reg_alpha", 1e-3, 10, log=True),
+        "use_label_encoder": False,
+        "eval_metric": "logloss"
+    }
+
+    # Definisi model
+    model = XGBClassifier(**param)
+
+    # Cross validation (5-fold stratified)
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    scores = cross_val_score(model, X, y, cv=cv, scoring="accuracy")
+
+    return np.mean(scores)
+
+# Jalankan studi Optuna
+study = optuna.create_study(direction="maximize")
+study.optimize(objective, n_trials=30, timeout=600)  # 30 percobaan atau 10 menit
+
+print("Best Trial:")
+trial = study.best_trial
+print("  Value (Accuracy): {:.4f}".format(trial.value))
+print("  Params: ")
+for key, value in trial.params.items():
+    print("    {}: {}".format(key, value))
