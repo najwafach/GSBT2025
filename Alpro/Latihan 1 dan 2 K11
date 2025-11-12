@@ -1,0 +1,92 @@
+#include <stdio.h>
+#include <stdlib.h>
+
+void balikArray(int *arr, int n) {
+    int i, j, temp;
+    for (i = 0, j = n - 1; i < j; i++, j--) {
+        temp = arr[i];
+        arr[i] = arr[j];
+        arr[j] = temp;
+    }
+}
+
+int main() {
+    int n;
+    scanf("%d", &n);
+
+    // alokasi memori dinamis
+    int *arr = (int *)malloc(n * sizeof(int));
+
+    // input elemen array
+    for (int i = 0; i < n; i++) {
+        scanf("%d", &arr[i]);
+    }
+
+    // panggil fungsi pembalik
+    balikArray(arr, n);
+
+    // tampilkan hasil
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+
+    // hapus memori setelah dipakai
+    free(arr);
+
+    return 0;
+}
+
+//LATIHAN 2
+#include <stdio.h>
+#include <stdlib.h>
+
+// fungsi transpose
+void transpose(int **A, int **B, int n, int m) {
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            B[j][i] = A[i][j];
+        }
+    }
+}
+
+int main() {
+    int n, m;
+    scanf("%d %d", &n, &m);
+
+    // alokasi array 2D untuk A
+    int **A = (int **)malloc(n * sizeof(int *));
+    for (int i = 0; i < n; i++)
+        A[i] = (int *)malloc(m * sizeof(int));
+
+    // alokasi array 2D untuk B (hasil transpose)
+    int **B = (int **)malloc(m * sizeof(int *));
+    for (int i = 0; i < m; i++)
+        B[i] = (int *)malloc(n * sizeof(int));
+
+    // input elemen matriks A
+    for (int i = 0; i < n; i++) {
+        for (int j = 0; j < m; j++) {
+            scanf("%d", &A[i][j]);
+        }
+    }
+
+    // panggil fungsi transpose
+    transpose(A, B, n, m);
+
+    // tampilkan hasil transpose
+    for (int i = 0; i < m; i++) {
+        for (int j = 0; j < n; j++) {
+            printf("%d ", B[i][j]);
+        }
+        printf("\n");
+    }
+
+    // bebaskan memori
+    for (int i = 0; i < n; i++) free(A[i]);
+    free(A);
+
+    for (int i = 0; i < m; i++) free(B[i]);
+    free(B);
+
+    return 0;
+}
